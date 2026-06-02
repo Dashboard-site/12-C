@@ -1907,10 +1907,10 @@
         <div class="tools-tile-label">Student<br>Roulette</div>
       </button>
 
-      <button class="tools-tile tools-tile-soon" disabled>
-        <div class="tools-tile-icon">⚙️</div>
-        <div class="tools-tile-label">Coming<br>Soon</div>
-      </button>
+     <button class="tools-tile" id="installBtn" onclick="installPWA()">
+         <div class="tools-tile-icon">📲</div>
+         <div class="tools-tile-label">Install App<br><small style="font-size:10px;opacity:0.7;">(PWA)</small></div>
+     </button>
 
       <button class="tools-tile tools-tile-soon" disabled>
         <div class="tools-tile-icon">⚙️</div>
@@ -3946,6 +3946,40 @@ function showNotifToast() {
   }, msToMidnight);
 })();
 
+
+/* ==================== PWA INSTALL PROMPT ==================== */
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log("✅ PWA Install prompt is ready");
+    
+    // Show the Install button in Tools menu
+    const installBtn = document.getElementById('installBtn');
+    if (installBtn) installBtn.style.display = 'flex';
+});
+
+async function installPWA() {
+    if (!deferredPrompt) {
+        alert("Install option is not available right now.");
+        return;
+    }
+
+    // Show the native install dialog
+    deferredPrompt.prompt();
+
+    // Wait for user response
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install prompt: ${outcome}`);
+
+    // Clear the saved prompt
+    deferredPrompt = null;
+
+    // Optionally hide the button after install
+    const installBtn = document.getElementById('installBtn');
+    if (installBtn) installBtn.style.display = 'none';
+}
 /* ----------------------------------------------------------------
    PART K — PWA SERVICE WORKER REGISTRATION
    ---------------------------------------------------------------- */
