@@ -2026,23 +2026,23 @@ const defaults = {
       {subject:"Maths", teacher:"Renya tr."},
       {subject:"Computer Science", teacher:"Sarala tr."},
       {subject:"English", teacher:"Manoj Kuriakose sir"},
-      {subject:"Optional", teacher:"-"},
+      {subject:"Optional Subject", teacher:"-"},
       {subject:"Chemistry", teacher:"Vimal sir"},
       {subject:"Maths", teacher:"Sujith sir"},
       {subject:"Physics Practical", teacher:"-"},
       {subject:"Chemistry Practical", teacher:"-"}
     ],
     2: [ // Tuesday
-      {subject:"Assembly",        teacher:"-"},
-      {subject:"Physics",         teacher:"Shyni tr."},
-      {subject:"Maths",           teacher:"Bijesh sir"},
-      {subject:"Break",           teacher:"-"},
-      {subject:"Chemistry",       teacher:"Vimal sir"},
-      {subject:"English",         teacher:"Manoj Mathew sir"},
-      {subject:"Lunch Break",     teacher:"-"},
+      {subject:"Computer Science",        teacher:"Sarala tr."},
+      {subject:"Chemistry",         teacher:"Vimal sir"},
+      {subject:"Physics",           teacher:"Deepesh sir"},
+      {subject:"Maths",           teacher:"Sujith sir"},
+      {subject:"English",       teacher:"Manoj Kuriakose sir"},
+      {subject:"Optional Subject",         teacher:"-"},
+      {subject:"Chemistry",     teacher:"Ashley tr."},
       {subject:"Computer Science",teacher:"Sarala tr."},
-      {subject:"Physics",         teacher:"Deepesh sir"},
-      {subject:"National Anthem", teacher:"-"}
+      {subject:"P.T.",         teacher:"Abin sir"},
+      {subject:"English", teacher:"Manoj Mathew sir"}
     ],
     3: [ // Wednesday
       {subject:"Assembly",        teacher:"-"},
@@ -3724,20 +3724,20 @@ function resetRoulette() {
   `idx`   = timetable index of the CURRENT slot (null for breaks/dismissed)
 */
 const NOTIF_SCHEDULE = [
-  { time: "20:33", type: "period",    idx: 0,    prev: null,       prevLabel: null },
-  { time: "20:34", type: "period",    idx: 1,    prev: "period",   prevLabel: "Period 0" },
-  { time: "20:35", type: "period",    idx: 2,    prev: "period",   prevLabel: "Period 1" },
-  { time: "20:36", type: "break",     idx: null, prev: "period",   prevLabel: "Period 2",  breakEnd: "11:10" },
-  { time: "20:37", type: "period",    idx: 3,    prev: "break",    prevLabel: null },
-  { time: "20:38", type: "period",    idx: 4,    prev: "period",   prevLabel: "Period 3" },
-  { time: "20:39", type: "lunch",     idx: null, prev: "period",   prevLabel: "Period 4",  breakEnd: "1:00 PM" },
-  { time: "20:40", type: "period",    idx: 5,    prev: "lunch",    prevLabel: null },
-  { time: "20:41", type: "period",    idx: 6,    prev: "period",   prevLabel: "Period 5" },
-  { time: "20:42", type: "break",     idx: null, prev: "period",   prevLabel: "Period 6",  breakEnd: "2:20 PM" },
-  { time: "20:43", type: "period",    idx: 7,    prev: "break",    prevLabel: null },
-  { time: "20:44", type: "period",    idx: 8,    prev: "period",   prevLabel: "Period 7" },
-  { time: "20:45", type: "period",    idx: 9,    prev: "period",   prevLabel: "Period 8" },
-  { time: "20:46", type: "dismissed", idx: null, prev: "period",   prevLabel: "Period 9" }
+  { time: "08:40", type: "period",    idx: 0,    prev: null,       prevLabel: null },
+  { time: "09:40", type: "period",    idx: 1,    prev: "period",   prevLabel: "Period 0" },
+  { time: "10:20", type: "period",    idx: 2,    prev: "period",   prevLabel: "Period 1" },
+  { time: "11:00", type: "break",     idx: null, prev: "period",   prevLabel: "Period 2",  breakEnd: "11:10" },
+  { time: "11:10", type: "period",    idx: 3,    prev: "break",    prevLabel: null },
+  { time: "11:50", type: "period",    idx: 4,    prev: "period",   prevLabel: "Period 3" },
+  { time: "12:30", type: "lunch",     idx: null, prev: "period",   prevLabel: "Period 4",  breakEnd: "1:00 PM" },
+  { time: "13:00", type: "period",    idx: 5,    prev: "lunch",    prevLabel: null },
+  { time: "13:35", type: "period",    idx: 6,    prev: "period",   prevLabel: "Period 5" },
+  { time: "14:10", type: "break",     idx: null, prev: "period",   prevLabel: "Period 6",  breakEnd: "2:20 PM" },
+  { time: "14:20", type: "period",    idx: 7,    prev: "break",    prevLabel: null },
+  { time: "14:55", type: "period",    idx: 8,    prev: "period",   prevLabel: "Period 7" },
+  { time: "15:30", type: "period",    idx: 9,    prev: "period",   prevLabel: "Period 8" },
+  { time: "16:20", type: "dismissed", idx: null, prev: "period",   prevLabel: "Period 9" }
 ];
 
 let _notifPermission = Notification.permission;
