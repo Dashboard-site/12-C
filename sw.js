@@ -47,14 +47,22 @@ self.addEventListener("fetch", event => {
      5 = Period IV   (09:50–10:30)
    ---------------------------------------------------------------- */
 const NOTIF_SCHEDULE = [
-  { time: "07:25", type: "break",     idx: 0,    prev: null,     prevLabel: null,         breakEnd: "07:40" },
-  { time: "07:40", type: "period",    idx: 1,    prev: "break",  prevLabel: null                            },
-  { time: "08:20", type: "period",    idx: 2,    prev: "period", prevLabel: "Period I"                      },
-  { time: "09:00", type: "break",     idx: null, prev: "period", prevLabel: "Period II",  breakEnd: "09:10" },
-  { time: "09:10", type: "period",    idx: 4,    prev: "break",  prevLabel: null                            },
-  { time: "09:50", type: "period",    idx: 5,    prev: "period", prevLabel: "Period III"                    },
-  { time: "10:30", type: "dismissed", idx: null, prev: "period", prevLabel: "Period IV"                     }
+  { time: "08:40", type: "period",    idx: 0,    prev: null,       prevLabel: null },
+  { time: "09:40", type: "period",    idx: 1,    prev: "period",   prevLabel: "Period 0" },
+  { time: "10:20", type: "period",    idx: 2,    prev: "period",   prevLabel: "Period 1" },
+  { time: "11:00", type: "break",     idx: null, prev: "period",   prevLabel: "Period 2",  breakEnd: "11:10" },
+  { time: "11:10", type: "period",    idx: 3,    prev: "break",    prevLabel: null },
+  { time: "11:50", type: "period",    idx: 4,    prev: "period",   prevLabel: "Period 3" },
+  { time: "12:30", type: "lunch",     idx: null, prev: "period",   prevLabel: "Period 4",  breakEnd: "1:00 PM" },
+  { time: "13:00", type: "period",    idx: 5,    prev: "lunch",    prevLabel: null },
+  { time: "13:35", type: "period",    idx: 6,    prev: "period",   prevLabel: "Period 5" },
+  { time: "14:10", type: "break",     idx: null, prev: "period",   prevLabel: "Period 6",  breakEnd: "2:20 PM" },
+  { time: "14:20", type: "period",    idx: 7,    prev: "break",    prevLabel: null },
+  { time: "14:55", type: "period",    idx: 8,    prev: "period",   prevLabel: "Period 7" },
+  { time: "15:30", type: "period",    idx: 9,    prev: "period",   prevLabel: "Period 8" },
+  { time: "16:20", type: "dismissed", idx: null, prev: "period",   prevLabel: "Period 9" }
 ];
+
 
 /* Maps timetable slot index → display label (mirrors PERIOD_LABELS_NOTIF in index.html) */
 const PERIOD_LABELS = { 1: "Period I", 2: "Period II", 4: "Period III", 5: "Period IV" };
