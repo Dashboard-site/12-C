@@ -35,17 +35,17 @@ self.addEventListener("fetch", event => {
   );
 });
 
-/* ----------------------------------------------------------------
-   NOTIFICATION SCHEDULE  (mirrors NOTIF_SCHEDULE in index.html)
 
-   Slots:
-     0 = Prayer      (07:25–07:40)
-     1 = Period I    (07:40–08:20)
-     2 = Period II   (08:20–09:00)
-     3 = Interval    (09:00–09:10)
-     4 = Period III  (09:10–09:50)
-     5 = Period IV   (09:50–10:30)
+/* ----------------------------------------------------------------
+   PART M — PERIOD CHANGE NOTIFICATIONS
    ---------------------------------------------------------------- */
+
+/*
+  Schedule table — each entry fires ONE notification at `time`.
+  `prev`  = what just ended (null for first period)
+  `type`  = "period" | "break" | "lunch" | "dismissed"
+  `idx`   = timetable index of the CURRENT slot (null for breaks/dismissed)
+*/
 const NOTIF_SCHEDULE = [
   { time: "08:40", type: "period",    idx: 0,    prev: null,       prevLabel: null },
   { time: "09:40", type: "period",    idx: 1,    prev: "period",   prevLabel: "Period 0" },
@@ -63,103 +63,115 @@ const NOTIF_SCHEDULE = [
   { time: "16:20", type: "dismissed", idx: null, prev: "period",   prevLabel: "Period 9" }
 ];
 
+let _notifPermission = Notification.permission;
+let _notifTimers     = [];
 
-/* Maps timetable slot index → display label (mirrors PERIOD_LABELS_NOTIF in index.html) */
-const PERIOD_LABELS = { 1: "Period I", 2: "Period II", 4: "Period III", 5: "Period IV" };
-
-let _timetable = null;
-let _swTimers  = [];
-
-/* ----------------------------------------------------------------
-   MESSAGE HANDLER — page sends timetable + triggers scheduling
-   ---------------------------------------------------------------- */
-self.addEventListener("message", event => {
-  const msg = event.data;
-  if (!msg) return;
-  if (msg.type === "SCHEDULE_NOTIFICATIONS") {
-    _timetable = msg.timetable;
-    scheduleSWNotifications();
-  }
-  if (msg.type === "CANCEL_NOTIFICATIONS") {
-    cancelSWTimers();
-  }
-});
-
-/* ----------------------------------------------------------------
-   SCHEDULING
-   ---------------------------------------------------------------- */
-function cancelSWTimers() {
-  _swTimers.forEach(t => clearTimeout(t));
-  _swTimers = [];
-}
-
-function scheduleSWNotifications() {
-  cancelSWTimers();
-  const now       = Date.now();
-  const d         = new Date();
-  const todayBase = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-
-  NOTIF_SCHEDULE.forEach(entry => {
-    const [h, m] = entry.time.split(":").map(Number);
-    const fireAt = todayBase + h * 3600000 + m * 60000;
-    const delay  = fireAt - now;
-    if (delay > 0) {
-      _swTimers.push(setTimeout(() => swShowNotification(entry), delay));
-    }
-  });
-
-  /* Auto-reschedule at midnight */
-  const tomorrow = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 5).getTime();
-  _swTimers.push(setTimeout(() => { if (_timetable) scheduleSWNotifications(); }, tomorrow - now));
-}
-
-function buildContent(entry) {
+function buildNotifContent(entry) {
   const day = new Date().getDay();
-  const tt  = _timetable?.[day] || [];
-  let title = "", body = "";
+  const tt  = data.timetables[day] || data.timetables[String(day)] || defaults.timetables[day];
+
+  let title = "";
+  let body  = "";
 
   if (entry.type === "period") {
-    const period = tt[entry.idx];
-    const sub    = period?.subject || "---";
-    const teach  = period?.teacher || "---";
-    const num    = PERIOD_LABELS[entry.idx] || ("Period " + entry.idx);
+    const period = tt?.[entry.idx];
+    const sub    = period?.subject  || "—";
+    const teach  = period?.teacher  || "—";
+    const num    = `Period ${entry.idx}`;
 
     if (entry.prev === "period" && entry.prevLabel) {
-      /* Find previous period's subject from timetable */
-      const prevEntry = NOTIF_SCHEDULE.find(e => PERIOD_LABELS[e.idx] === entry.prevLabel && e.type === "period");
-      const prevSub   = prevEntry ? (tt[prevEntry.idx]?.subject || "---") : "---";
-      title = `${entry.prevLabel}, ${prevSub} Over`;
-      body  = `Current Period: ${sub} - ${teach}`;
+      const prevIdx    = parseInt(entry.prevLabel.replace("Period ", ""));
+      const prevPeriod = tt?.[prevIdx];
+      const prevSub    = prevPeriod?.subject || "—";
+      const isAssembly = prevSub.toLowerCase().includes("assembly") || prevIdx === 0;
+      const overLabel  = isAssembly ? "Prayer/Assembly Over" : `${entry.prevLabel}, ${prevSub} Over`;
+      title = `📚 ${overLabel}`;
+      body  = `Current Period: ${sub} · ${teach}`;
     } else {
-      const prevPart = entry.prev === "break" ? "Interval over." : "";
-      title = `${num}: ${sub} - ${teach}`;
+      const prevPart = entry.prev === "break" ? "Break over." :
+                       entry.prev === "lunch" ? "Lunch over." : "";
+      title = `📚 ${num}: ${sub} · ${teach}`;
       body  = prevPart;
     }
 
   } else if (entry.type === "break") {
-    const isPrayer = entry.idx === 0;
-    title = isPrayer ? "Prayer Time" : "Interval";
-    body  = (entry.prevLabel ? entry.prevLabel + " over. " : "") + "Ends at " + entry.breakEnd;
+    title = "☕ Break Time";
+    body  = `${entry.prevLabel} over · Break until ${entry.breakEnd}`;
+
+  } else if (entry.type === "lunch") {
+    title = "🍽️ Lunch Break";
+    body  = `${entry.prevLabel} over · Lunch until ${entry.breakEnd}`;
 
   } else if (entry.type === "dismissed") {
-    title = "School Dismissed";
-    body  = `${entry.prevLabel} over. See you tomorrow!`;
+    title = "🏁 School Dismissed";
+    body  = `${entry.prevLabel} over · See you tomorrow!`;
   }
 
   return { title, body };
 }
 
-function swShowNotification(entry) {
-  const { title, body } = buildContent(entry);
-  self.registration.showNotification(title, {
+function fireNotification(entry) {
+  if (Notification.permission !== "granted") return;
+  const { title, body } = buildNotifContent(entry);
+  const opts = {
     body,
     icon:     "icon.png",
     badge:    "icon.png",
     tag:      `period-${entry.time}`,
     renotify: true,
     silent:   false
-  });
+  };
+  /* Use SW registration.showNotification — fires even when tab is backgrounded.
+     Falls back to new Notification() if SW isn't ready. */
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready
+      .then(reg => reg.showNotification(title, opts))
+      .catch(() => new Notification(title, opts));
+  } else {
+    new Notification(title, opts);
+  }
 }
+
+/* Track which notifications have already fired today */
+let _notifFiredToday = new Set();
+let _notifIntervalId = null;
+
+function scheduleAllNotifications() {
+  /* Clear any previous interval */
+  if (_notifIntervalId) clearInterval(_notifIntervalId);
+  _notifFiredToday.clear();
+
+  if (Notification.permission !== "granted") return;
+
+  /* Mark any entries already past as fired so we don't re-fire on page reload */
+  const now    = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  NOTIF_SCHEDULE.forEach(entry => {
+    const [h, m] = entry.time.split(":").map(Number);
+    if (nowMin > h * 60 + m) _notifFiredToday.add(entry.time);
+  });
+
+  /* Poll every 30 s — far more reliable than long setTimeout on mobile */
+  _notifIntervalId = setInterval(checkAndFireNotifications, 30000);
+  console.log("Notification polling started.");
+}
+
+function checkAndFireNotifications() {
+  if (Notification.permission !== "granted") return;
+  const now    = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  NOTIF_SCHEDULE.forEach(entry => {
+    if (_notifFiredToday.has(entry.time)) return;
+    const [h, m] = entry.time.split(":").map(Number);
+    const entryMin = h * 60 + m;
+    /* Fire if we're within a 2-minute window — handles interval timing jitter */
+    if (nowMin >= entryMin && nowMin < entryMin + 2) {
+      _notifFiredToday.add(entry.time);
+      fireNotification(entry);
+    }
+  });
+      }
 
 /* ----------------------------------------------------------------
    NOTIFICATION CLICK — focus or open the app
