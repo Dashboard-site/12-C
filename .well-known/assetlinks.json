@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.dashboard.xiic",
+    "sha256_cert_fingerprints": [
+      "89:94:19:56:0E:AF:08:ED:EF:22:6B:DA:90:C2:21:A7:99:08:14:6F:8D:6E:99:86:52:EE:91:2E:18:C9:85:17"
+    ]
+  }
+}]
